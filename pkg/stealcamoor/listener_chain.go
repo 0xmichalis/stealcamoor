@@ -52,6 +52,7 @@ func (sc *Stealcamoor) startChainListener() {
 
 func (sc *Stealcamoor) handleStolenEvent(event *abis.StealcamStolen) {
 	id := event.Id.Uint64()
+	log.Print("Handling Stolen event with id ", id)
 
 	if !sc.isStolenFromCreator(event) {
 		// Skip if not a mint
