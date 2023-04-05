@@ -24,6 +24,9 @@ import (
 
 func New() (*Stealcamoor, error) {
 	sc := &Stealcamoor{}
+	if err := sc.initMisc(); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
 	if err := sc.initApiClient(); err != nil {
 		return nil, fmt.Errorf("failed to initialize api client: %w", err)
 	}
@@ -32,9 +35,6 @@ func New() (*Stealcamoor, error) {
 	}
 	if err := sc.initBlockchainClient(); err != nil {
 		return nil, fmt.Errorf("failed to initialize blockchain client: %w", err)
-	}
-	if err := sc.initMisc(); err != nil {
-		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
 	return sc, nil
