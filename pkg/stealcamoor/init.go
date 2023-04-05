@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/0xmichalis/stealcamoor/pkg/abis"
 	email "github.com/0xmichalis/stealcamoor/pkg/email"
 	"github.com/0xmichalis/stealcamoor/pkg/etherscan"
 	"github.com/0xmichalis/stealcamoor/pkg/stealcamapi"
@@ -125,6 +126,12 @@ func (sc *Stealcamoor) initBlockchainClient() error {
 		return fmt.Errorf("cannot create authorized transactor: %w", err)
 	}
 	sc.txOpts = txOpts
+
+	stealcam, err := abis.NewStealcam(sc.stealcamAddress, client)
+	if err != nil {
+		return fmt.Errorf("cannot instantiate stealcam contract client: %w", err)
+	}
+	sc.stealcamContract = stealcam
 
 	return nil
 }
