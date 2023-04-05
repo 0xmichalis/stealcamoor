@@ -1,12 +1,14 @@
 package stealcamoor
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/event"
 
 	"github.com/0xmichalis/stealcamoor/pkg/abis"
 )
@@ -29,10 +31,13 @@ func (sc *Stealcamoor) startChainListener() {
 	log.Print("Starting on-chain listener...")
 
 	steals := make(chan *abis.StealcamStolen)
-	sub, err := sc.stealcamContract.StealcamFilterer.WatchStolen(nil, steals)
-	if err != nil {
-		log.Fatalf("Failed to subscribe to Stolen events: %v", err)
-	}
+	sub := event.Resubscribe(2*time.Second, func(ctx context.Context) (event.Subscription, error) {
+		sub, err := sc.stealcamContract.StealcamFilterer.WatchStolen(nil, steals)
+		if err != nil {
+			log.Fatalf("Failed to subscribe to Stolen events: %v", err)
+		}
+		return sub, nil
+	})
 
 	for {
 		select {
