@@ -60,18 +60,26 @@ func (sc *Stealcamoor) initApiClient() error {
 }
 
 func (sc *Stealcamoor) initEmailClient() error {
-	password := os.Getenv("MAILTRAP_PASSWORD")
+	host := os.Getenv("SMTP_HOST")
+	if host == "" {
+		return errors.New("SMTP_HOST cannot be empty")
+	}
+	username := os.Getenv("SMTP_USERNAME")
+	if username == "" {
+		return errors.New("SMTP_USERNAME cannot be empty")
+	}
+	password := os.Getenv("SMTP_PASSWORD")
 	if password == "" {
-		return errors.New("MAILTRAP_PASSWORD cannot be empty")
+		return errors.New("SMTP_PASSWORD cannot be empty")
 	}
-	from := os.Getenv("MAILTRAP_FROM")
+	from := os.Getenv("SMTP_FROM")
 	if from == "" {
-		return errors.New("MAILTRAP_FROM cannot be empty")
+		return errors.New("SMTP_FROM cannot be empty")
 	}
-	sc.emailClient = email.New(password, from)
-	to := os.Getenv("MAILTRAP_TO")
+	sc.emailClient = email.New(host, username, password, from)
+	to := os.Getenv("SMTP_TO")
 	if to == "" {
-		return errors.New("MAILTRAP_TO cannot be empty")
+		return errors.New("SMTP_TO cannot be empty")
 	}
 	sc.to = to
 

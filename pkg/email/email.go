@@ -10,13 +10,10 @@ type EmailClient struct {
 	from string
 }
 
-func New(password string, from string) *EmailClient {
-	smtpHost := "live.smtp.mailtrap.io"
-	auth := smtp.PlainAuth("", "api", password, smtpHost)
-
+func New(host string, username string, password string, from string) *EmailClient {
 	return &EmailClient{
-		url:  smtpHost + ":25",
-		auth: auth,
+		url:  host + ":25",
+		auth: smtp.PlainAuth("", username, password, host),
 		from: from,
 	}
 }
