@@ -93,12 +93,16 @@ func (sc *Stealcamoor) initBlockchainClient() error {
 		return errors.New("PRIVATE_KEY cannot be empty")
 	}
 
-	if os.Getenv("NODE_API_URL") == "" {
+	nodeURL := os.Getenv("NODE_API_URL")
+	if nodeURL == "" {
 		return errors.New("NODE_API_URL cannot be empty")
+	}
+	if !strings.HasPrefix(nodeURL, "wss://") {
+		return errors.New("NODE_API_URL needs to be a Websocket RPC URL")
 	}
 
 	log.Println("Initializing node connection...")
-	client, err := ethclient.Dial(os.Getenv("NODE_API_URL"))
+	client, err := ethclient.Dial(nodeURL)
 	if err != nil {
 		return fmt.Errorf("cannot connect to node: %w", err)
 	}
