@@ -36,7 +36,9 @@ func (sc *Stealcamoor) startChainListener() {
 	for {
 		select {
 		case err := <-sub.Err():
-			log.Printf("Got subscription error: %v", err)
+			if err != nil {
+				log.Printf("Got subscription error: %v", err)
+			}
 
 		case stolen := <-steals:
 			sc.handleStolenEvent(stolen)
