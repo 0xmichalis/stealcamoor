@@ -12,7 +12,7 @@ make build
 
 ## Setup email connection
 
-Create a Mailtrap account and follow [these instructions](https://mailtrap.io/blog/golang-send-email/#Sending-emails-with-a-third-party-SMTP-server) to set up the account.
+Create a Mailtrap account and follow [these instructions](https://www.youtube.com/watch?v=g5o0ixCi4tg) to set up the account.
 
 ## Run
 
