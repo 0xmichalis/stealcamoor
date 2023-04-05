@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
@@ -38,6 +39,9 @@ func (sc *Stealcamoor) startChainListener() {
 		case err := <-sub.Err():
 			if err != nil {
 				log.Printf("Got subscription error: %v", err)
+			} else {
+				log.Print("Got a nil subsciption error?! Not sure why this can happen.")
+				time.Sleep(10 * time.Second)
 			}
 
 		case stolen := <-steals:
