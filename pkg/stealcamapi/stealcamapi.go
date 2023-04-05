@@ -2,6 +2,7 @@ package stealcamapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -9,7 +10,7 @@ import (
 )
 
 type Memory struct {
-	ID    string
+	ID    int
 	Owner *string
 }
 
@@ -45,8 +46,8 @@ func (a ApiClient) GetMemories(creator common.Address) ([]Memory, error) {
 	return *memories, nil
 }
 
-func (a ApiClient) GetMemory(id string) (*Memory, error) {
-	resp, err := a.c.Get(a.baseURL + "/memories/" + id)
+func (a ApiClient) GetMemory(id int) (*Memory, error) {
+	resp, err := a.c.Get(fmt.Sprintf("%s/memories/%d", a.baseURL, id))
 	if err != nil {
 		return nil, err
 	}

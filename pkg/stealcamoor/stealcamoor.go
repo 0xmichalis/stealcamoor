@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/0xmichalis/stealcamoor/pkg/etherscan"
 	"github.com/0xmichalis/stealcamoor/pkg/stealcamapi"
 	stealcamutils "github.com/0xmichalis/stealcamoor/pkg/stealcamapi/utils"
 )
@@ -57,8 +58,7 @@ func New() (*Stealcamoor, error) {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
-	// Connect to node
-	// TODO: Make timeout configurable
+	log.Println("Initializing node connection...")
 	client, err := ethclient.Dial(os.Getenv("NODE_API_URL"))
 	if err != nil {
 		return nil, fmt.Errorf("cannot connect to node: %w", err)
@@ -69,7 +69,7 @@ func New() (*Stealcamoor, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot get chain id: %w", err)
 	}
-	fmt.Println("Chain ID:", chainID)
+	log.Println("Chain ID:", chainID)
 
 	// Load private key
 	privateKey, err := crypto.HexToECDSA(os.Getenv("PRIVATE_KEY"))
@@ -84,7 +84,7 @@ func New() (*Stealcamoor, error) {
 		return nil, fmt.Errorf("cannot cast public key to ECDSA")
 	}
 	address := crypto.PubkeyToAddress(*publicKeyECDSA)
-	fmt.Printf("Our address: %s/address/%s\n", sc.explorerURL, address)
+	log.Println("Our address:", etherscan.GetEtherscanAddress(sc.explorerURL, address))
 
 	txOpts, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
 	if err != nil {
@@ -98,23 +98,24 @@ func New() (*Stealcamoor, error) {
 }
 
 func (sc *Stealcamoor) validate() error {
-	creatorStrings := strings.Split(os.Getenv("CREATORS"), ",")
-	creators := make([]common.Address, 0)
-	fmt.Printf("Tracking %d creators:\n", len(creatorStrings))
-	for _, creator := range creatorStrings {
-		fmt.Println(creator)
-		creators = append(creators, common.HexToAddress(creator))
-	}
-	if len(creators) == 0 {
-		return errors.New("Need at least one creator provided in CREATORS (comma-separated list)")
-	}
-	sc.creators = creators
-
 	explorerURL := os.Getenv("BLOCKCHAIN_EXPLORER_URL")
 	if explorerURL == "" {
 		return errors.New("BLOCKCHAIN_EXPLORER_URL cannot be empty")
 	}
 	sc.explorerURL = explorerURL
+
+	creatorStrings := strings.Split(os.Getenv("CREATORS"), ",")
+	creators := make([]common.Address, 0)
+	log.Printf("Tracking %d creators:\n", len(creatorStrings))
+	for _, creator := range creatorStrings {
+		c := common.HexToAddress(creator)
+		creators = append(creators, c)
+		log.Println(etherscan.GetEtherscanAddress(sc.explorerURL, c))
+	}
+	if len(creators) == 0 {
+		return errors.New("Need at least one creator provided in CREATORS (comma-separated list)")
+	}
+	sc.creators = creators
 
 	apiURL := os.Getenv("STEALCAM_API_URL")
 	if apiURL == "" {
@@ -136,7 +137,7 @@ func (sc *Stealcamoor) validate() error {
 		return errors.New("STEALCAM_ADDRESS cannot be empty")
 	}
 	sc.stealcamAddress = common.HexToAddress(stealcamAddress)
-	fmt.Printf("Stealcam address: %s/address/%s\n", sc.explorerURL, sc.stealcamAddress.String())
+	log.Println("Stealcam address:", etherscan.GetEtherscanAddress(sc.explorerURL, sc.stealcamAddress))
 
 	if os.Getenv("PRIVATE_KEY") == "" {
 		return errors.New("PRIVATE_KEY cannot be empty")
@@ -150,6 +151,7 @@ func (sc *Stealcamoor) validate() error {
 }
 
 func (sc *Stealcamoor) startChainListener() {
+	log.Println("Starting on-chain listener...")
 	headers := make(chan *types.Header)
 	sub, err := sc.client.SubscribeNewHead(context.Background(), headers)
 	if err != nil {
@@ -169,26 +171,32 @@ func (sc *Stealcamoor) startChainListener() {
 }
 
 func (sc *Stealcamoor) startApiListener() {
-	tick := time.Tick(sc.apiRequestInterval)
+	log.Println("Starting API listener...")
+	sc.checkCreators()
+
 	for {
 		select {
-		case <-tick:
-			fmt.Printf("Producer: TICK %v\n", time.Now())
-			for _, creator := range sc.creators {
-				memories, err := sc.apiClient.GetMemories(creator)
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-				unminted := stealcamutils.FilterUnmintedMemories(memories)
-				if len(unminted) == 0 {
-					fmt.Printf("No unminted memories for %s\n", creator)
-					continue
-				}
-				for _, id := range unminted {
-					fmt.Println("Unminted memory id %s for %s\n", id, creator)
-				}
-			}
+		case <-time.Tick(sc.apiRequestInterval):
+			log.Println("Checking creators...")
+			sc.checkCreators()
+		}
+	}
+}
+
+func (sc *Stealcamoor) checkCreators() {
+	for _, creator := range sc.creators {
+		memories, err := sc.apiClient.GetMemories(creator)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		unminted := stealcamutils.FilterUnmintedMemories(memories)
+		if len(unminted) == 0 {
+			log.Printf("No unminted memories for %s\n", creator)
+			continue
+		}
+		for _, id := range unminted {
+			log.Println("Unminted memory id %s for %s\n", id, creator)
 		}
 	}
 }
