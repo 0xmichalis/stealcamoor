@@ -1,4 +1,7 @@
-# Stealcamoor
+<p align="center">
+    <img src="./assets/head.png" alt="head" width="150"/>
+</p>
+<h1 align="center">Stealcamoor</h1>
 
 A monitoring service to notify you when a new memory from your favorite influencor drops in [Stealcam](https://www.stealcam.com/).
 
