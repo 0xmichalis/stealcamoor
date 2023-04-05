@@ -11,7 +11,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Some error occured. Err: %s", err)
+		log.Fatalf("Failed to read env file: %v", err)
 	}
 
 	l, err := stealcamoor.New()
