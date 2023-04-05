@@ -26,7 +26,7 @@ func (sc *Stealcamoor) startApiListener() {
 func (sc *Stealcamoor) checkCreators() {
 	for _, creator := range sc.creators {
 		if err := sc.checkCreator(creator); err != nil {
-			log.Print("Failed to check memories for creator %s: %v", creator, err)
+			log.Printf("Failed to check memories for creator %s: %v", creator, err)
 		}
 	}
 }
@@ -41,7 +41,7 @@ func (sc *Stealcamoor) checkCreator(creator common.Address) error {
 	// Filter out all but unminted memories
 	unminted := stealcamutils.FilterUnmintedMemories(memories)
 	if len(unminted) == 0 {
-		log.Printf("No unminted memories for %s\n", creator)
+		log.Print("No unminted memories for ", creator)
 		return nil
 	}
 
@@ -55,14 +55,14 @@ func (sc *Stealcamoor) checkCreator(creator common.Address) error {
 			continue
 		}
 
-		msg := fmt.Sprintf(`Unminted memory id %s for %s!
+		msg := fmt.Sprintf(`Unminted memory id %d for %s!
 
 	Mint at https://www.stealcam.com/memories/%d`, m.ID, creator, m.ID)
 
 		log.Print(msg)
 
 		if err := sc.emailClient.Send([]string{sc.to}, msg); err != nil {
-			log.Print("Failed to send email:", err)
+			log.Print("Failed to send email: ", err)
 		} else {
 			sc.emailCache[m.ID] = true
 		}

@@ -25,7 +25,7 @@ func (sc *Stealcamoor) isStolenFromCreator(event *abis.StealcamStolen) bool {
 }
 
 func (sc *Stealcamoor) startChainListener() {
-	log.Println("Starting on-chain listener...")
+	log.Print("Starting on-chain listener...")
 
 	steals := make(chan *abis.StealcamStolen)
 	sub, err := sc.stealcamContract.StealcamFilterer.WatchStolen(nil, steals)
@@ -60,14 +60,14 @@ func (sc *Stealcamoor) handleStolenEvent(event *abis.StealcamStolen) {
 		return
 	}
 
-	msg := fmt.Sprintf(`Newly minted memory id %s for %s!
+	msg := fmt.Sprintf(`Newly minted memory id %d for %s!
 
 	Steal at https://www.stealcam.com/memories/%d`, id, event.From, id)
 
 	log.Print(msg)
 
 	if err := sc.emailClient.Send([]string{sc.to}, msg); err != nil {
-		log.Print("Failed to send email:", err)
+		log.Print("Failed to send email: ", err)
 	} else {
 		sc.emailCache[id] = true
 	}
