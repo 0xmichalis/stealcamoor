@@ -71,6 +71,11 @@ func (sc *Stealcamoor) initEmailClient() error {
 		return errors.New("MAILTRAP_FROM cannot be empty")
 	}
 	sc.emailClient = email.New(username, password, from)
+	to := os.Getenv("MAILTRAP_TO")
+	if to == "" {
+		return errors.New("MAILTRAP_TO cannot be empty")
+	}
+	sc.to = to
 
 	return nil
 }

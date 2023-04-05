@@ -16,6 +16,13 @@ type Stealcamoor struct {
 
 	/* Email-related config */
 	emailClient *email.EmailClient
+	// This cache is used to keep track of ids for which
+	// an email has already been sent. Since it's just an
+	// in-memory cache, this means that service restarts
+	// may result in resending already sent emails.
+	emailCache map[int]bool
+	// where to send emails to
+	to string
 
 	/* Blockchain-related config */
 	client          *ethclient.Client
