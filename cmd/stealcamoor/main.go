@@ -10,8 +10,10 @@ import (
 
 func main() {
 	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Failed to read env file: %v", err)
+	if err == nil {
+		log.Printf("Loading config from .env file")
+	} else {
+		log.Printf("No .env file found, will read config from environment variables")
 	}
 
 	l, err := stealcamoor.New()
