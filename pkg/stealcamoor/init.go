@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -73,6 +74,9 @@ func (sc *Stealcamoor) initEmailClient() error {
 		return errors.New("MAILTRAP_TO cannot be empty")
 	}
 	sc.to = to
+
+	sc.emailCacheLock = new(sync.Mutex)
+	sc.emailCache = make(map[uint64]bool)
 
 	return nil
 }

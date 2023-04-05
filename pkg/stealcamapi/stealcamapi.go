@@ -10,7 +10,7 @@ import (
 )
 
 type Memory struct {
-	ID    int
+	ID    uint64
 	Owner *string
 }
 

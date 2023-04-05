@@ -23,7 +23,7 @@ type Stealcamoor struct {
 	// in-memory cache, this means that service restarts
 	// may result in resending already sent emails.
 	emailCacheLock *sync.Mutex
-	emailCache     map[int]bool
+	emailCache     map[uint64]bool
 	// where to send emails to
 	to string
 

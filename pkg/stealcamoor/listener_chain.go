@@ -1,6 +1,7 @@
 package stealcamoor
 
 import (
+	"fmt"
 	"log"
 	"math/big"
 
@@ -38,9 +39,36 @@ func (sc *Stealcamoor) startChainListener() {
 			log.Printf("Got subscription error: %v", err)
 
 		case stolen := <-steals:
-			if sc.isStolenFromCreator(stolen) {
-
-			}
+			sc.handleStolenEvent(stolen)
 		}
+	}
+}
+
+func (sc *Stealcamoor) handleStolenEvent(event *abis.StealcamStolen) {
+	id := event.Id.Uint64()
+
+	if !sc.isStolenFromCreator(event) {
+		// Skip if not a mint
+		return
+	}
+
+	sc.emailCacheLock.Lock()
+	defer sc.emailCacheLock.Unlock()
+
+	if sc.emailCache[id] {
+		// Skip if already notified (via the API listener)
+		return
+	}
+
+	msg := fmt.Sprintf(`Newly minted memory id %s for %s!
+
+	Steal at https://www.stealcam.com/memories/%d`, id, event.From, id)
+
+	log.Print(msg)
+
+	if err := sc.emailClient.Send([]string{sc.to}, msg); err != nil {
+		log.Print("Failed to send email:", err)
+	} else {
+		sc.emailCache[id] = true
 	}
 }
