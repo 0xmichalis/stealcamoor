@@ -15,14 +15,17 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"github.com/0xmichalis/stealcamoor/pkg/stealcamapi"
 )
 
 type Stealcamoor struct {
-	// Node connection
-	client *ethclient.Client
+	/* Blockchain-related config */
 
-	// Blockchain explorer URL
-	explorerURL string
+	// Node connection
+	client          *ethclient.Client
+	explorerURL     string
+	stealcamAddress common.Address
 
 	// TODO: Figure out whether it is faster to always
 	// instantiate this vs deep-copying to avoid mutations
@@ -30,9 +33,10 @@ type Stealcamoor struct {
 	// will always be in specific fields, ie., gas stuff
 	TxOpts *bind.TransactOpts
 
-	apiRequestInterval time.Duration
+	/* Backend-related config */
 
-	stealcamAddress common.Address
+	apiRequestInterval time.Duration
+	apiClient          *stealcamapi.ApiClient
 }
 
 var (
