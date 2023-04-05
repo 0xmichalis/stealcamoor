@@ -5,8 +5,9 @@ import (
 	"log"
 	"time"
 
-	stealcamutils "github.com/0xmichalis/stealcamoor/pkg/stealcamapi/utils"
 	"github.com/ethereum/go-ethereum/common"
+
+	stealcamutils "github.com/0xmichalis/stealcamoor/pkg/stealcamapi/utils"
 )
 
 func (sc *Stealcamoor) startApiListener() {
