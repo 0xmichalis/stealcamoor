@@ -1,7 +1,7 @@
 package stealcamapi
 
 import (
-	"fmt"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
@@ -9,7 +9,8 @@ import (
 )
 
 type Memory struct {
-	id string
+	ID    string
+	Owner *string
 }
 
 type ApiClient struct {
@@ -24,7 +25,7 @@ func New(baseURL string) *ApiClient {
 	}
 }
 
-func (a ApiClient) getMemories(creator common.Address) ([]Memory, error) {
+func (a ApiClient) GetMemories(creator common.Address) ([]Memory, error) {
 	resp, err := a.c.Get(a.baseURL + "/memories/created/" + creator.String())
 	if err != nil {
 		return nil, err
@@ -36,12 +37,15 @@ func (a ApiClient) getMemories(creator common.Address) ([]Memory, error) {
 		return nil, err
 	}
 
-	fmt.Println(body)
+	memories := new([]Memory)
+	if err := json.Unmarshal(body, memories); err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return *memories, nil
 }
 
-func (a ApiClient) getMemory(id string) (*Memory, error) {
+func (a ApiClient) GetMemory(id string) (*Memory, error) {
 	resp, err := a.c.Get(a.baseURL + "/memories/" + id)
 	if err != nil {
 		return nil, err
@@ -53,7 +57,10 @@ func (a ApiClient) getMemory(id string) (*Memory, error) {
 		return nil, err
 	}
 
-	fmt.Println(body)
+	m := &Memory{}
+	if err := json.Unmarshal(body, m); err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return m, nil
 }
