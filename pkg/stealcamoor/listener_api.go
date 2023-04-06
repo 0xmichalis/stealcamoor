@@ -46,11 +46,15 @@ func (sc *Stealcamoor) checkCreator(creator common.Address) error {
 		return nil
 	}
 
-	msgFmt := `Unminted memory id %d for %s!
+	go func() {
+		msgFmt := `Unminted memory id %d for %s!
 
-	Mint at https://www.stealcam.com/memories/%d`
+		Mint at https://www.stealcam.com/memories/%d`
 
-	sc.sendEmail(msgFmt, unmintedIDs, creator)
+		sc.sendEmail(msgFmt, unmintedIDs, creator)
+	}()
+
+	sc.tryMint(creator, unmintedIDs)
 
 	return nil
 }

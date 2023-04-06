@@ -139,6 +139,7 @@ func (sc *Stealcamoor) initBlockchainClient() error {
 		return fmt.Errorf("cannot cast public key to ECDSA")
 	}
 	address := crypto.PubkeyToAddress(*publicKeyECDSA)
+	sc.ourAddress = address
 	log.Println("Our address:", etherscan.GetEtherscanAddress(sc.explorerURL, address))
 
 	txOpts, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
@@ -146,12 +147,16 @@ func (sc *Stealcamoor) initBlockchainClient() error {
 		return fmt.Errorf("cannot create authorized transactor: %w", err)
 	}
 	sc.txOpts = txOpts
+	sc.txOpts.GasLimit = 10000000
 
 	stealcam, err := abis.NewStealcam(sc.stealcamAddress, client)
 	if err != nil {
 		return fmt.Errorf("cannot instantiate stealcam contract client: %w", err)
 	}
 	sc.stealcamContract = stealcam
+
+	sc.mintCacheLock = new(sync.Mutex)
+	sc.mintCache = make(map[uint64]bool)
 
 	return nil
 }

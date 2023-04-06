@@ -10,8 +10,9 @@ import (
 )
 
 type Memory struct {
-	ID    uint64
-	Owner *string
+	ID        uint64
+	Owner     *string
+	Signature string
 }
 
 type ApiClient struct {
@@ -46,7 +47,7 @@ func (a ApiClient) GetMemories(creator common.Address) ([]Memory, error) {
 	return *memories, nil
 }
 
-func (a ApiClient) GetMemory(id int) (*Memory, error) {
+func (a ApiClient) GetMemory(id uint64) (*Memory, error) {
 	resp, err := a.c.Get(fmt.Sprintf("%s/memories/%d", a.baseURL, id))
 	if err != nil {
 		return nil, err
@@ -62,6 +63,9 @@ func (a ApiClient) GetMemory(id int) (*Memory, error) {
 	if err := json.Unmarshal(body, m); err != nil {
 		return nil, err
 	}
+
+	// drop the 0x prefix
+	m.Signature = m.Signature[2:]
 
 	return m, nil
 }

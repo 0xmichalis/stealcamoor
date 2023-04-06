@@ -6,19 +6,20 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/event"
 
 	"github.com/0xmichalis/stealcamoor/pkg/abis"
 )
 
 var (
-	noOpts = new(bind.CallOpts)
-	zero   = big.NewInt(0)
+	zero = big.NewInt(0)
 )
 
 func (sc *Stealcamoor) isStolenFromCreator(event *abis.StealcamStolen) bool {
 	for _, creator := range sc.creators {
+		// Needs to be a creator we care about. Also currently only interested
+		// in getting the first mint but this may be expanded in the future to
+		// be more configurable.
 		if event.From.String() == creator.String() && event.Value.Cmp(zero) == 0 {
 			return true
 		}
@@ -63,9 +64,13 @@ func (sc *Stealcamoor) handleStolenEvent(event *abis.StealcamStolen) {
 		return
 	}
 
-	msgFmt := `Newly minted memory id %d for %s!
+	go func() {
+		msgFmt := `Newly minted memory id %d for %s!
 
-	Steal at https://www.stealcam.com/memories/%d`
+		Steal at https://www.stealcam.com/memories/%d`
 
-	sc.sendEmail(msgFmt, []uint64{id}, event.From)
+		sc.sendEmail(msgFmt, []uint64{id}, event.From)
+	}()
+
+	sc.tryMint(event.From, []uint64{id})
 }

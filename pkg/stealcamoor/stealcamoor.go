@@ -28,10 +28,13 @@ type Stealcamoor struct {
 	to string
 
 	/* Blockchain-related config */
+	mintCacheLock    *sync.Mutex
+	mintCache        map[uint64]bool
 	stealcamContract *abis.Stealcam
 	client           *ethclient.Client
 	explorerURL      string
 	stealcamAddress  common.Address
+	ourAddress       common.Address
 	txOpts           *bind.TransactOpts
 
 	/* Backend-related config */
