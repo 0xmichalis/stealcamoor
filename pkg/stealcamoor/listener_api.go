@@ -7,7 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	stealcamutils "github.com/0xmichalis/stealcamoor/pkg/stealcamapi/utils"
+	stealcamutils "github.com/0xmichalis/stealcamoor/pkg/client/stealcam/utils"
 )
 
 func (sc *Stealcamoor) startApiListener() {

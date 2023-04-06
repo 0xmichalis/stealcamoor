@@ -1,4 +1,4 @@
-package stealcamapi
+package stealcam
 
 import (
 	"encoding/json"

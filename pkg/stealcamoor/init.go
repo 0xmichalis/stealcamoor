@@ -17,9 +17,9 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/0xmichalis/stealcamoor/pkg/abis"
-	email "github.com/0xmichalis/stealcamoor/pkg/email"
+	email "github.com/0xmichalis/stealcamoor/pkg/client/email"
+	"github.com/0xmichalis/stealcamoor/pkg/client/stealcam"
 	"github.com/0xmichalis/stealcamoor/pkg/etherscan"
-	"github.com/0xmichalis/stealcamoor/pkg/stealcamapi"
 )
 
 func New() (*Stealcamoor, error) {
@@ -45,7 +45,7 @@ func (sc *Stealcamoor) initApiClient() error {
 	if apiURL == "" {
 		return errors.New("STEALCAM_API_URL cannot be empty")
 	}
-	sc.apiClient = stealcamapi.New(apiURL)
+	sc.apiClient = stealcam.New(apiURL)
 
 	if os.Getenv("STEALCAM_API_REQUEST_INTERVAL") == "" {
 		return errors.New("STEALCAM_API_REQUEST_INTERVAL cannot be empty")

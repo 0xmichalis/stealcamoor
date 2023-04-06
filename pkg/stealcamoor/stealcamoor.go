@@ -9,8 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/0xmichalis/stealcamoor/pkg/abis"
-	email "github.com/0xmichalis/stealcamoor/pkg/email"
-	"github.com/0xmichalis/stealcamoor/pkg/stealcamapi"
+	email "github.com/0xmichalis/stealcamoor/pkg/client/email"
+	"github.com/0xmichalis/stealcamoor/pkg/client/stealcam"
 )
 
 type Stealcamoor struct {
@@ -35,7 +35,7 @@ type Stealcamoor struct {
 	txOpts           *bind.TransactOpts
 
 	/* Backend-related config */
-	apiClient          *stealcamapi.ApiClient
+	apiClient          *stealcam.ApiClient
 	apiRequestInterval time.Duration
 }
 
