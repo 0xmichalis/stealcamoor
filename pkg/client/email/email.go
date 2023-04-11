@@ -10,9 +10,9 @@ type EmailClient struct {
 	from string
 }
 
-func New(host string, username string, password string, from string) *EmailClient {
+func New(host string, port string, username string, password string, from string) *EmailClient {
 	return &EmailClient{
-		url:  host + ":25",
+		url:  host + ":" + port,
 		auth: smtp.PlainAuth("", username, password, host),
 		from: from,
 	}

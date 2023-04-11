@@ -64,6 +64,10 @@ func (sc *Stealcamoor) initEmailClient() error {
 	if host == "" {
 		return errors.New("SMTP_HOST cannot be empty")
 	}
+	port := os.Getenv("SMTP_PORT")
+	if port == "" {
+		return errors.New("SMTP_PORT cannot be empty")
+	}
 	username := os.Getenv("SMTP_USERNAME")
 	if username == "" {
 		return errors.New("SMTP_USERNAME cannot be empty")
@@ -76,7 +80,7 @@ func (sc *Stealcamoor) initEmailClient() error {
 	if from == "" {
 		return errors.New("SMTP_FROM cannot be empty")
 	}
-	sc.emailClient = email.New(host, username, password, from)
+	sc.emailClient = email.New(host, port, username, password, from)
 	to := os.Getenv("SMTP_TO")
 	if to == "" {
 		return errors.New("SMTP_TO cannot be empty")
