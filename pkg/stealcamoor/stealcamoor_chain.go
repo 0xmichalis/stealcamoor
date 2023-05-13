@@ -3,8 +3,13 @@ package stealcamoor
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
+	"io"
 	"log"
 	"math/big"
+	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -45,6 +50,7 @@ func (sc *Stealcamoor) tryMint(creator common.Address, ids []uint64) {
 	}
 
 	sc.mint(creator, idsForSigs, sigs)
+	sc.reveal(creator, idsForSigs)
 }
 
 func (sc *Stealcamoor) mint(creator common.Address, ids []uint64, sigs [][]byte) {
@@ -76,6 +82,7 @@ func (sc *Stealcamoor) mint(creator common.Address, ids []uint64, sigs [][]byte)
 		sc.txOpts.GasPrice = gasPrice
 		sc.txOpts.Value = big.NewInt(0)
 
+		// TODO: Handle reverts
 		tx, err := sc.stealcamContract.StealcamTransactor.Mint(
 			sc.txOpts, big.NewInt(int64(id)), creator, sigs[i],
 		)
@@ -85,5 +92,52 @@ func (sc *Stealcamoor) mint(creator common.Address, ids []uint64, sigs [][]byte)
 			continue
 		}
 		log.Printf("Transaction broadcasted: %s", tx.Hash().Hex())
+	}
+}
+
+func (sc *Stealcamoor) reveal(creator common.Address, ids []uint64) {
+	if len(ids) == 0 {
+		return
+	}
+	log.Printf("Revealing memories %v for creator %s...", ids, creator)
+
+	for _, id := range ids {
+		if !sc.mintCache[id] {
+			// Skip if not successfully minted
+			continue
+		}
+
+		url, err := sc.apiClient.RevealMemory(id, sc.ourAddress, sc.ourSignature)
+		if err != nil {
+			log.Printf("Cannot reveal memory %d: %v", id, err)
+			continue
+		}
+
+		// Download image
+		filename := creator.String() + "_" + fmt.Sprintf("%d", id) + ".jpg"
+
+		out, err := os.Create(filename)
+		if err != nil {
+			log.Printf("Cannot create file to store image: %v", err)
+			continue
+		}
+		defer out.Close()
+
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Printf("Cannot download image: %v", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		// Write the image to disk
+		// TODO: Update to send as attachment via email
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			log.Printf("Cannot save image: %v", err)
+			return
+		}
+
+		log.Println("Image saved to", filepath.Join(".", filename))
 	}
 }

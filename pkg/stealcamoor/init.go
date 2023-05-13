@@ -13,6 +13,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 
@@ -142,6 +143,14 @@ func (sc *Stealcamoor) initBlockchainClient() error {
 	sc.ourAddress = address
 	log.Println("Our address:", etherscan.GetEtherscanAddress(sc.explorerURL, address))
 
+	// Sign message and store signature once to be used during reveals
+	message := "Confirming my ETH address to reveal a Stealcam photo"
+	signature, err := signMessage(message, privateKey)
+	if err != nil {
+		return fmt.Errorf("cannot sign message: %w", err)
+	}
+	sc.ourSignature = signature
+
 	txOpts, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
 	if err != nil {
 		return fmt.Errorf("cannot create authorized transactor: %w", err)
@@ -159,6 +168,17 @@ func (sc *Stealcamoor) initBlockchainClient() error {
 	sc.mintCache = make(map[uint64]bool)
 
 	return nil
+}
+
+func signMessage(message string, privateKey *ecdsa.PrivateKey) (string, error) {
+	fullMessage := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(message), message)
+	hash := crypto.Keccak256Hash([]byte(fullMessage))
+	signatureBytes, err := crypto.Sign(hash.Bytes(), privateKey)
+	if err != nil {
+		return "", err
+	}
+	signatureBytes[64] += 27
+	return hexutil.Encode(signatureBytes), nil
 }
 
 func (sc *Stealcamoor) initMisc() error {

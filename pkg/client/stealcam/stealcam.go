@@ -1,6 +1,7 @@
 package stealcam
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -68,4 +69,45 @@ func (a ApiClient) GetMemory(id uint64) (*Memory, error) {
 	m.Signature = m.Signature[2:]
 
 	return m, nil
+}
+
+func (a ApiClient) RevealMemory(id uint64, address common.Address, signature string) (string, error) {
+	reqBody := struct {
+		Address   string `json:"address"`
+		Signature string `json:"signature"`
+	}{
+		Address:   address.String(),
+		Signature: signature,
+	}
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/memories/%d", a.baseURL, id), bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := a.c.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// return the URL to the stolen image
+	r := struct {
+		MediaUrl string
+	}{}
+	if err := json.Unmarshal(respBody, &r); err != nil {
+		return "", err
+	}
+
+	return r.MediaUrl, nil
 }

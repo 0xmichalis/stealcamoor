@@ -35,6 +35,7 @@ type Stealcamoor struct {
 	explorerURL      string
 	stealcamAddress  common.Address
 	ourAddress       common.Address
+	ourSignature     string
 	txOpts           *bind.TransactOpts
 
 	/* Backend-related config */
