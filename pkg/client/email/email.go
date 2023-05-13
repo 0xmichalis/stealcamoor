@@ -2,6 +2,7 @@ package mail
 
 import (
 	"net/smtp"
+	"strings"
 )
 
 type EmailClient struct {
@@ -18,6 +19,11 @@ func New(host string, port string, username string, password string, from string
 	}
 }
 
-func (c EmailClient) Send(to []string, message string) error {
-	return smtp.SendMail(c.url, c.auth, c.from, to, []byte(message))
+func (c EmailClient) Send(to []string, body string) error {
+	msg := []byte("To: " + strings.Join(to, ",") + "\r\n" +
+		"Subject: Stealcam drop\r\n" +
+		"From: " + c.from + "\r\n" +
+		"\r\n" +
+		body + "\r\n")
+	return smtp.SendMail(c.url, c.auth, c.from, to, msg)
 }
