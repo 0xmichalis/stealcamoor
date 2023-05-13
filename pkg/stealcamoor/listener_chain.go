@@ -15,18 +15,6 @@ var (
 	zero = big.NewInt(0)
 )
 
-func (sc *Stealcamoor) isStolenFromCreator(event *abis.StealcamStolen) bool {
-	for _, creator := range sc.creators {
-		// Needs to be a creator we care about. Also currently only interested
-		// in getting the first mint but this may be expanded in the future to
-		// be more configurable.
-		if event.From.String() == creator.String() && event.Value.Cmp(zero) == 0 {
-			return true
-		}
-	}
-	return false
-}
-
 func (sc *Stealcamoor) startChainListener() {
 	log.Print("Starting on-chain listener...")
 
@@ -65,4 +53,16 @@ func (sc *Stealcamoor) handleStolenEvent(event *abis.StealcamStolen) {
 	}
 
 	sc.tryMint(event.From, []uint64{id})
+}
+
+func (sc *Stealcamoor) isStolenFromCreator(event *abis.StealcamStolen) bool {
+	for _, creator := range sc.creators {
+		// Needs to be a creator we care about. Also currently only interested
+		// in getting the first mint but this may be expanded in the future to
+		// be more configurable.
+		if event.From.String() == creator.String() && event.Value.Cmp(zero) == 0 {
+			return true
+		}
+	}
+	return false
 }
