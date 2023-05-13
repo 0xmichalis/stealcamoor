@@ -24,8 +24,6 @@ type Stealcamoor struct {
 	// may result in resending already sent emails.
 	emailCacheLock *sync.Mutex
 	emailCache     map[uint64]bool
-	// where to send emails to
-	to string
 
 	/* Blockchain-related config */
 	mintCacheLock    *sync.Mutex

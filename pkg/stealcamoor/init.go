@@ -81,12 +81,11 @@ func (sc *Stealcamoor) initEmailClient() error {
 	if from == "" {
 		return errors.New("SMTP_FROM cannot be empty")
 	}
-	sc.emailClient = email.New(host, port, username, password, from)
 	to := os.Getenv("SMTP_TO")
 	if to == "" {
 		return errors.New("SMTP_TO cannot be empty")
 	}
-	sc.to = to
+	sc.emailClient = email.New(host, port, username, password, from, strings.Split(to, ","))
 
 	sc.emailCacheLock = new(sync.Mutex)
 	sc.emailCache = make(map[uint64]bool)

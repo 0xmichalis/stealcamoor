@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+
+	mail "github.com/0xmichalis/stealcamoor/pkg/client/email"
 )
 
 func (sc *Stealcamoor) tryMint(creator common.Address, ids []uint64) {
@@ -106,38 +106,41 @@ func (sc *Stealcamoor) reveal(creator common.Address, ids []uint64) {
 			// Skip if not successfully minted
 			continue
 		}
+		sc.sendEmailForMemory(creator, id)
+	}
+}
 
-		url, err := sc.apiClient.RevealMemory(id, sc.ourAddress, sc.ourSignature)
-		if err != nil {
-			log.Printf("Cannot reveal memory %d: %v", id, err)
-			continue
-		}
+func (sc *Stealcamoor) sendEmailForMemory(creator common.Address, id uint64) {
+	url, err := sc.apiClient.RevealMemory(id, sc.ourAddress, sc.ourSignature)
+	if err != nil {
+		log.Printf("Cannot reveal memory %d: %v", id, err)
+		return
+	}
 
-		// Download image
-		filename := creator.String() + "_" + fmt.Sprintf("%d", id) + ".jpg"
+	// Download image
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Printf("Cannot download image: %v", err)
+		return
+	}
+	defer resp.Body.Close()
 
-		out, err := os.Create(filename)
-		if err != nil {
-			log.Printf("Cannot create file to store image: %v", err)
-			continue
-		}
-		defer out.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Cannot save image: %v", err)
+		return
+	}
 
-		resp, err := http.Get(url)
-		if err != nil {
-			log.Printf("Cannot download image: %v", err)
-			return
-		}
-		defer resp.Body.Close()
+	// Pack as an email attachment
+	msg := fmt.Sprintf("Check attachments for revealed memory %d for creator %s", id, creator.String())
+	attachment := mail.Attachment{
+		Name:        creator.String() + "_" + fmt.Sprintf("%d", id) + ".jpg",
+		ContentType: "image/jpeg",
+		Content:     body,
+	}
 
-		// Write the image to disk
-		// TODO: Update to send as attachment via email
-		_, err = io.Copy(out, resp.Body)
-		if err != nil {
-			log.Printf("Cannot save image: %v", err)
-			return
-		}
-
-		log.Println("Image saved to", filepath.Join(".", filename))
+	// Send email
+	if err := sc.emailClient.Send(msg, attachment); err != nil {
+		log.Printf("Cannot send email: %v", err)
 	}
 }

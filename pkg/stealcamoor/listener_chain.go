@@ -64,13 +64,5 @@ func (sc *Stealcamoor) handleStolenEvent(event *abis.StealcamStolen) {
 		return
 	}
 
-	go func() {
-		msgFmt := `Newly minted memory id %d for %s!
-
-		Steal at https://www.stealcam.com/memories/%d`
-
-		sc.sendEmail(msgFmt, []uint64{id}, event.From)
-	}()
-
 	sc.tryMint(event.From, []uint64{id})
 }
