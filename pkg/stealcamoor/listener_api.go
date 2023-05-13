@@ -40,34 +40,17 @@ func (sc *Stealcamoor) checkCreator(creator common.Address) error {
 	}
 
 	// Filter out all but unminted memories
-	unminted := stealcamutils.FilterUnmintedMemories(memories)
-	if len(unminted) == 0 {
+	unmintedIDs := stealcamutils.FilterUnmintedMemoryIDs(memories)
+	if len(unmintedIDs) == 0 {
 		log.Print("No unminted memories for ", creator)
 		return nil
 	}
 
-	sc.emailCacheLock.Lock()
-	defer sc.emailCacheLock.Unlock()
+	msgFmt := `Unminted memory id %d for %s!
 
-	// Notify on unminted memories
-	for _, m := range unminted {
-		if sc.emailCache[m.ID] {
-			// Skip if found in the cache
-			continue
-		}
+	Mint at https://www.stealcam.com/memories/%d`
 
-		msg := fmt.Sprintf(`Unminted memory id %d for %s!
-
-	Mint at https://www.stealcam.com/memories/%d`, m.ID, creator, m.ID)
-
-		log.Print(msg)
-
-		if err := sc.emailClient.Send([]string{sc.to}, msg); err != nil {
-			log.Print("Failed to send email: ", err)
-		} else {
-			sc.emailCache[m.ID] = true
-		}
-	}
+	sc.sendEmail(msgFmt, unmintedIDs, creator)
 
 	return nil
 }

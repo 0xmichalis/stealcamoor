@@ -2,7 +2,6 @@ package stealcamoor
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"math/big"
 	"time"
@@ -64,23 +63,9 @@ func (sc *Stealcamoor) handleStolenEvent(event *abis.StealcamStolen) {
 		return
 	}
 
-	sc.emailCacheLock.Lock()
-	defer sc.emailCacheLock.Unlock()
+	msgFmt := `Newly minted memory id %d for %s!
 
-	if sc.emailCache[id] {
-		// Skip if already notified (via the API listener)
-		return
-	}
+	Steal at https://www.stealcam.com/memories/%d`
 
-	msg := fmt.Sprintf(`Newly minted memory id %d for %s!
-
-	Steal at https://www.stealcam.com/memories/%d`, id, event.From, id)
-
-	log.Print(msg)
-
-	if err := sc.emailClient.Send([]string{sc.to}, msg); err != nil {
-		log.Print("Failed to send email: ", err)
-	} else {
-		sc.emailCache[id] = true
-	}
+	sc.sendEmail(msgFmt, []uint64{id}, event.From)
 }
