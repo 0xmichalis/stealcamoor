@@ -14,7 +14,9 @@ import (
 )
 
 type Stealcamoor struct {
-	creators []common.Address
+	/* Misc config */
+	backupDir string
+	creators  []common.Address
 
 	/* Email-related config */
 	emailClient *email.EmailClient
@@ -36,7 +38,7 @@ type Stealcamoor struct {
 	ourSignature     string
 	txOpts           *bind.TransactOpts
 
-	/* Backend-related config */
+	/* API-related config */
 	apiClient          *stealcam.ApiClient
 	apiRequestInterval time.Duration
 }

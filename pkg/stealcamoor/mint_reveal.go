@@ -10,6 +10,8 @@ import (
 	"math/big"
 	"mime"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -127,7 +129,7 @@ func (sc *Stealcamoor) sendEmailForMemory(creator common.Address, id uint64) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Cannot save image: %v", err)
 		return
@@ -135,7 +137,7 @@ func (sc *Stealcamoor) sendEmailForMemory(creator common.Address, id uint64) {
 
 	// Read the first 512 bytes of the file to try to detect the content type
 	buffer := make([]byte, 512)
-	if _, err = bytes.NewReader(body).Read(buffer); err != nil {
+	if _, err = bytes.NewReader(content).Read(buffer); err != nil {
 		log.Printf("Cannot read body: %v", err)
 		return
 	}
@@ -148,16 +150,22 @@ func (sc *Stealcamoor) sendEmailForMemory(creator common.Address, id uint64) {
 	}
 
 	// Pack as an email attachment
+	filename := creator.String() + "_" + fmt.Sprintf("%d", id) + fileExtension[0]
 	msg := fmt.Sprintf("Check attachments for revealed memory %d for creator %s", id, creator.String())
 	attachment := mail.Attachment{
-		Name:        creator.String() + "_" + fmt.Sprintf("%d", id) + fileExtension[0],
+		Name:        filename,
 		ContentType: contentType,
-		Content:     body,
+		Content:     content,
 	}
 
 	// Send email
 	log.Printf("Sending email for memory %d...", id)
 	if err := sc.emailClient.Send(msg, attachment); err != nil {
 		log.Printf("Cannot send email: %v", err)
+	}
+
+	// Email content may be corrupted, write content in a local file too
+	if err := os.WriteFile(filepath.Join(sc.backupDir, filename), content, 0644); err != nil {
+		log.Printf("Cannot write file: %v", err)
 	}
 }

@@ -200,5 +200,7 @@ func (sc *Stealcamoor) initMisc() error {
 	}
 	sc.creators = creators
 
+	sc.backupDir = os.Getenv("BACKUP_DIR")
+
 	return nil
 }
