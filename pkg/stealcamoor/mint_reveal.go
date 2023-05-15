@@ -1,12 +1,14 @@
 package stealcamoor
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math/big"
+	"mime"
 	"net/http"
 	"time"
 
@@ -131,15 +133,30 @@ func (sc *Stealcamoor) sendEmailForMemory(creator common.Address, id uint64) {
 		return
 	}
 
+	// Read the first 512 bytes of the file to try to detect the content type
+	buffer := make([]byte, 512)
+	if _, err = bytes.NewReader(body).Read(buffer); err != nil {
+		log.Printf("Cannot read body: %v", err)
+		return
+	}
+	contentType := http.DetectContentType(buffer)
+	log.Println("Detected content type: " + contentType)
+	fileExtension, err := mime.ExtensionsByType(contentType)
+	if err != nil {
+		log.Printf("Cannot get file extension: %v", err)
+		return
+	}
+
 	// Pack as an email attachment
 	msg := fmt.Sprintf("Check attachments for revealed memory %d for creator %s", id, creator.String())
 	attachment := mail.Attachment{
-		Name:        creator.String() + "_" + fmt.Sprintf("%d", id) + ".jpg",
-		ContentType: "image/jpeg",
+		Name:        creator.String() + "_" + fmt.Sprintf("%d", id) + fileExtension[0],
+		ContentType: contentType,
 		Content:     body,
 	}
 
 	// Send email
+	log.Printf("Sending email for memory %d...", id)
 	if err := sc.emailClient.Send(msg, attachment); err != nil {
 		log.Printf("Cannot send email: %v", err)
 	}
