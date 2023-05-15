@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -69,6 +71,29 @@ func (a ApiClient) GetMemory(id uint64) (*Memory, error) {
 	m.Signature = m.Signature[2:]
 
 	return m, nil
+}
+
+func (a ApiClient) RevealMemoryWithRetries(id uint64, address common.Address, signature string, retries int) (string, error) {
+	var (
+		url string
+		err error
+	)
+
+	for i := 0; i < retries; i++ {
+		url, err = a.RevealMemory(id, address, signature)
+		if err != nil {
+			log.Printf("Cannot reveal memory %d: %v", id, err)
+		}
+		if err == nil && url != "" {
+			return url, nil
+		}
+		time.Sleep(300 * time.Millisecond)
+	}
+
+	if err == nil {
+		err = fmt.Errorf("Cannot reveal memory %d: no URL returned", id)
+	}
+	return "", err
 }
 
 func (a ApiClient) RevealMemory(id uint64, address common.Address, signature string) (string, error) {

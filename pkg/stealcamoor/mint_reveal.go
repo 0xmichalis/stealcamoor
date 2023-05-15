@@ -111,7 +111,7 @@ func (sc *Stealcamoor) reveal(creator common.Address, ids []uint64) {
 }
 
 func (sc *Stealcamoor) sendEmailForMemory(creator common.Address, id uint64) {
-	url, err := sc.apiClient.RevealMemory(id, sc.ourAddress, sc.ourSignature)
+	url, err := sc.apiClient.RevealMemoryWithRetries(id, sc.ourAddress, sc.ourSignature, 30)
 	if err != nil {
 		log.Printf("Cannot reveal memory %d: %v", id, err)
 		return
