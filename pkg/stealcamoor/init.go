@@ -19,8 +19,8 @@ import (
 
 	"github.com/0xmichalis/stealcamoor/pkg/abis"
 	email "github.com/0xmichalis/stealcamoor/pkg/client/email"
+	"github.com/0xmichalis/stealcamoor/pkg/client/etherscan"
 	"github.com/0xmichalis/stealcamoor/pkg/client/stealcam"
-	"github.com/0xmichalis/stealcamoor/pkg/etherscan"
 )
 
 func New() (*Stealcamoor, error) {
