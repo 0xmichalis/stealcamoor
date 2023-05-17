@@ -44,6 +44,5 @@ type Stealcamoor struct {
 }
 
 func (sc *Stealcamoor) Start() {
-	go sc.startChainListener()
 	sc.startApiListener()
 }
