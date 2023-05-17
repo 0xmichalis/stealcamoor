@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -87,9 +86,6 @@ func (sc *Stealcamoor) initEmailClient() error {
 	}
 	sc.emailClient = email.New(host, port, username, password, from, strings.Split(to, ","))
 
-	sc.emailCacheLock = new(sync.Mutex)
-	sc.emailCache = make(map[uint64]bool)
-
 	return nil
 }
 
@@ -162,9 +158,6 @@ func (sc *Stealcamoor) initBlockchainClient() error {
 		return fmt.Errorf("cannot instantiate stealcam contract client: %w", err)
 	}
 	sc.stealcamContract = stealcam
-
-	sc.mintCacheLock = new(sync.Mutex)
-	sc.mintCache = make(map[uint64]bool)
 
 	return nil
 }

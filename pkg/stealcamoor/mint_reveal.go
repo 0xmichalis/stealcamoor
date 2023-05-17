@@ -23,15 +23,8 @@ func (sc *Stealcamoor) tryMint(creator common.Address, ids []uint64) {
 	idsForSigs := make([]uint64, 0)
 	sigs := make([][]byte, 0)
 
-	sc.mintCacheLock.Lock()
-	defer sc.mintCacheLock.Unlock()
-
 	// Fetch all signatures for the ids to mint
 	for _, id := range ids {
-		if sc.mintCache[id] {
-			continue
-		}
-
 		m, err := sc.apiClient.GetMemory(id)
 		if err != nil {
 			log.Printf("Cannot get memory %d: %v", id, err)
@@ -50,22 +43,14 @@ func (sc *Stealcamoor) tryMint(creator common.Address, ids []uint64) {
 
 		idsForSigs = append(idsForSigs, id)
 		sigs = append(sigs, signature)
-		sc.mintCache[id] = true
 	}
 
-	sc.mint(creator, idsForSigs, sigs)
-	sc.reveal(creator, idsForSigs)
+	if len(idsForSigs) != 0 {
+		sc.mint(creator, idsForSigs, sigs)
+	}
 }
 
 func (sc *Stealcamoor) mint(creator common.Address, ids []uint64, sigs [][]byte) {
-	if len(ids) == 0 {
-		return
-	}
-	if len(ids) != len(sigs) {
-		log.Printf("Cannot mint %d memories: %d signatures provided", len(ids), len(sigs))
-		return
-	}
-
 	nonce, err := sc.client.PendingNonceAt(context.Background(), sc.ourAddress)
 	if err != nil {
 		log.Printf("Cannot get pending nonce: %v", err)
@@ -78,9 +63,7 @@ func (sc *Stealcamoor) mint(creator common.Address, ids []uint64, sigs [][]byte)
 		log.Printf("Cannot get gas price: %v", err)
 		return
 	}
-	log.Printf("Gas price: %v", gasPrice)
 
-	// TODO: Deploy a contract to execute batch minting
 	for i, id := range ids {
 		sc.txOpts.Nonce = big.NewInt(int64(nonce + uint64(i)))
 		sc.txOpts.GasPrice = gasPrice
@@ -92,29 +75,17 @@ func (sc *Stealcamoor) mint(creator common.Address, ids []uint64, sigs [][]byte)
 		)
 		if err != nil {
 			log.Printf("Failed to mint memory %d: %v", id, err)
-			sc.mintCache[id] = false
 			continue
 		}
 		log.Printf("Transaction broadcasted: %s", tx.Hash().Hex())
+
+		go func(id uint64) {
+			sc.reveal(creator, id)
+		}(id)
 	}
 }
 
-func (sc *Stealcamoor) reveal(creator common.Address, ids []uint64) {
-	if len(ids) == 0 {
-		return
-	}
-	log.Printf("Revealing memories %v for creator %s...", ids, creator)
-
-	for _, id := range ids {
-		if !sc.mintCache[id] {
-			// Skip if not successfully minted
-			continue
-		}
-		sc.sendEmailForMemory(creator, id)
-	}
-}
-
-func (sc *Stealcamoor) sendEmailForMemory(creator common.Address, id uint64) {
+func (sc *Stealcamoor) reveal(creator common.Address, id uint64) {
 	url, err := sc.apiClient.RevealMemoryWithRetries(id, sc.ourAddress, sc.ourSignature, 30)
 	if err != nil {
 		log.Printf("Cannot reveal memory %d: %v", id, err)
