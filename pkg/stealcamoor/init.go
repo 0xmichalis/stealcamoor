@@ -182,15 +182,24 @@ func (sc *Stealcamoor) initMisc() error {
 
 	creatorStrings := strings.Split(os.Getenv("CREATORS"), ",")
 	creators := make([]common.Address, 0)
-	log.Printf("Tracking %d creators:\n", len(creatorStrings))
+	isDuplicate := make(map[string]bool)
 	for _, creator := range creatorStrings {
+		if isDuplicate[creator] {
+			return fmt.Errorf("duplicate creator %s", creator)
+		}
+		isDuplicate[creator] = true
 		c := common.HexToAddress(creator)
 		creators = append(creators, c)
-		log.Println(etherscan.GetEtherscanAddress(sc.explorerURL, c))
 	}
 	if len(creators) == 0 {
 		return errors.New("Need at least one creator provided in CREATORS (comma-separated list)")
 	}
+	if len(creators) == 1 {
+		log.Print("Tracking 1 creator.")
+	} else {
+		log.Printf("Tracking %d creators.", len(creatorStrings))
+	}
+
 	sc.creators = creators
 
 	sc.backupDir = os.Getenv("BACKUP_DIR")
