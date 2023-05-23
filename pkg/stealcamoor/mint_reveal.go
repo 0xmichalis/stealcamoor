@@ -121,9 +121,7 @@ func (sc *Stealcamoor) reveal(creator common.Address, id uint64) {
 	}
 
 	// Pack as an email attachment
-	username := sc.addressToTwitter[creator.String()]
-	filename := username + "_" + fmt.Sprintf("%d", id) + fileExtension[0]
-	msg := fmt.Sprintf("Just revealed https://www.stealcam.com/memories/%d for https://twitter.com/%s", id, username)
+	filename, msg := sc.getFilenameAndMessage(creator, id, fileExtension[0])
 	attachment := mail.Attachment{
 		Name:        filename,
 		ContentType: contentType,
@@ -140,4 +138,23 @@ func (sc *Stealcamoor) reveal(creator common.Address, id uint64) {
 	if err := os.WriteFile(filepath.Join(sc.backupDir, filename), content, 0644); err != nil {
 		log.Printf("Cannot write file: %v", err)
 	}
+}
+
+func (sc *Stealcamoor) getFilenameAndMessage(creator common.Address, id uint64, fileExtension string) (string, string) {
+	creatorString := creator.String()
+	username := sc.addressToTwitter[creatorString]
+	usernameHtml := creatorString
+
+	if username != "" {
+		usernameHtml = fmt.Sprintf(`<a href="https://twitter.com/%s">@%s</a>`, username, username)
+	} else {
+		// Creator has not set up a Twitter account
+		// Fallback to their address
+		username = creatorString
+	}
+
+	filename := username + "_" + fmt.Sprintf("%d", id) + fileExtension
+	msg := fmt.Sprintf(`Just revealed memory <a href="https://www.stealcam.com/memories/%d">%d</a> for %s`, id, id, usernameHtml)
+
+	return filename, msg
 }

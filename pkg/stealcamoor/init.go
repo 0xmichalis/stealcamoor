@@ -196,7 +196,11 @@ func (sc *Stealcamoor) initMisc() error {
 			return fmt.Errorf("cannot get profile for creator %s: %w", creator, err)
 		}
 		addressToTwitter[c.String()] = profile.Username
-		log.Printf("Tracking https://twitter.com/%s (%s)", profile.Username, creator)
+		logCreator := etherscan.GetEtherscanAddress(sc.explorerURL, c)
+		if profile.Username != "" {
+			logCreator = fmt.Sprintf("https://twitter.com/%s (%s)", profile.Username, creator)
+		}
+		log.Printf("Tracking creator %s", logCreator)
 	}
 	if len(creators) == 0 {
 		return errors.New("Need at least one creator provided in CREATORS (comma-separated list)")

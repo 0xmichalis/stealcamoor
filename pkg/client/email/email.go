@@ -39,7 +39,7 @@ func (c EmailClient) Send(body string, attachment Attachment) error {
 
 	// Add the email body
 	part, err := writer.CreatePart(textproto.MIMEHeader{
-		"Content-Type": []string{"text/plain; charset=utf-8"},
+		"Content-Type": []string{"text/html; charset=utf-8"},
 	})
 	if err != nil {
 		return err
