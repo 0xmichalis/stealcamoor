@@ -18,6 +18,11 @@ type Memory struct {
 	Signature string
 }
 
+type Profile struct {
+	// Twitter username
+	Username string
+}
+
 type ApiClient struct {
 	baseURL string
 	c       *http.Client
@@ -135,4 +140,24 @@ func (a ApiClient) RevealMemory(id uint64, address common.Address, signature str
 	}
 
 	return r.MediaUrl, nil
+}
+
+func (a ApiClient) GetProfile(creator common.Address) (*Profile, error) {
+	resp, err := a.c.Get(a.baseURL + "/profiles/" + creator.String())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	profile := &Profile{}
+	if err := json.Unmarshal(body, profile); err != nil {
+		return nil, err
+	}
+
+	return profile, nil
 }

@@ -24,11 +24,11 @@ import (
 
 func New() (*Stealcamoor, error) {
 	sc := &Stealcamoor{}
-	if err := sc.initMisc(); err != nil {
-		return nil, fmt.Errorf("invalid config: %w", err)
-	}
 	if err := sc.initApiClient(); err != nil {
 		return nil, fmt.Errorf("failed to initialize api client: %w", err)
+	}
+	if err := sc.initMisc(); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 	if err := sc.initEmailClient(); err != nil {
 		return nil, fmt.Errorf("failed to initialize email client: %w", err)
@@ -183,6 +183,7 @@ func (sc *Stealcamoor) initMisc() error {
 	creatorStrings := strings.Split(os.Getenv("CREATORS"), ",")
 	creators := make([]common.Address, 0)
 	isDuplicate := make(map[string]bool)
+	addressToTwitter := make(map[string]string)
 	for _, creator := range creatorStrings {
 		if isDuplicate[creator] {
 			return fmt.Errorf("duplicate creator %s", creator)
@@ -190,6 +191,12 @@ func (sc *Stealcamoor) initMisc() error {
 		isDuplicate[creator] = true
 		c := common.HexToAddress(creator)
 		creators = append(creators, c)
+		profile, err := sc.apiClient.GetProfile(c)
+		if err != nil {
+			return fmt.Errorf("cannot get profile for creator %s: %w", creator, err)
+		}
+		addressToTwitter[c.String()] = profile.Username
+		log.Printf("Tracking https://twitter.com/%s (%s)", profile.Username, creator)
 	}
 	if len(creators) == 0 {
 		return errors.New("Need at least one creator provided in CREATORS (comma-separated list)")
@@ -201,7 +208,7 @@ func (sc *Stealcamoor) initMisc() error {
 	}
 
 	sc.creators = creators
-
+	sc.addressToTwitter = addressToTwitter
 	sc.backupDir = os.Getenv("BACKUP_DIR")
 
 	return nil

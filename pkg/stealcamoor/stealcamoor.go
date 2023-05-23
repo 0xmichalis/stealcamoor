@@ -32,6 +32,7 @@ type Stealcamoor struct {
 	/* API-related config */
 	apiClient          *stealcam.ApiClient
 	apiRequestInterval time.Duration
+	addressToTwitter   map[string]string
 }
 
 func (sc *Stealcamoor) Start() {

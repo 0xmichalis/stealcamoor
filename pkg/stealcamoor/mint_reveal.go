@@ -121,8 +121,9 @@ func (sc *Stealcamoor) reveal(creator common.Address, id uint64) {
 	}
 
 	// Pack as an email attachment
-	filename := creator.String() + "_" + fmt.Sprintf("%d", id) + fileExtension[0]
-	msg := fmt.Sprintf("Check attachments for revealed memory %d for creator %s", id, creator.String())
+	username := sc.addressToTwitter[creator.String()]
+	filename := username + "_" + fmt.Sprintf("%d", id) + fileExtension[0]
+	msg := fmt.Sprintf("Just revealed https://www.stealcam.com/memories/%d for https://twitter.com/%s", id, username)
 	attachment := mail.Attachment{
 		Name:        filename,
 		ContentType: contentType,
